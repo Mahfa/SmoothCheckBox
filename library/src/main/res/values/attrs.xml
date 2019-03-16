@@ -6,5 +6,6 @@
         <attr name="color_checked" format="color"/>
         <attr name="color_unchecked" format="color"/>
         <attr name="color_unchecked_stroke" format="color"/>
+        <attr name="is_rect" format="boolean"/>
     </declare-styleable>
 </resources>

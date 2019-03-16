@@ -25,6 +25,8 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -53,15 +55,16 @@ public class SmoothCheckBox extends View implements Checkable {
     private static final int DEF_ANIM_DURATION = 300;
 
     private Paint mPaint, mTickPaint, mFloorPaint;
+    private RectF mRect, mFloorRect;
     private Point[] mTickPoints;
     private Point mCenterPoint;
     private Path mTickPath;
-
 
     private float mLeftLineDistance, mRightLineDistance, mDrewDistance;
     private float mScaleVal = 1.0f, mFloorScale = 1.0f;
     private int mWidth, mAnimDuration, mStrokeWidth;
     private int mCheckedColor, mUnCheckedColor, mFloorColor, mFloorUnCheckedColor;
+    private boolean isRect;
 
     private boolean mChecked;
     private boolean mTickDrawing;
@@ -95,6 +98,7 @@ public class SmoothCheckBox extends View implements Checkable {
         mCheckedColor = ta.getColor(R.styleable.SmoothCheckBox_color_checked, COLOR_CHECKED);
         mUnCheckedColor = ta.getColor(R.styleable.SmoothCheckBox_color_unchecked, COLOR_UNCHECKED);
         mStrokeWidth = ta.getDimensionPixelSize(R.styleable.SmoothCheckBox_stroke_width, CompatUtils.dp2px(getContext(), 0));
+        isRect = ta.getBoolean(R.styleable.SmoothCheckBox_is_rect, false);
         ta.recycle();
 
         mFloorUnCheckedColor = mFloorColor;
@@ -110,6 +114,9 @@ public class SmoothCheckBox extends View implements Checkable {
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setStyle(Paint.Style.FILL);
         mPaint.setColor(mCheckedColor);
+
+        mRect = new RectF(0, 0, 0, 0);
+        mFloorRect = new RectF(0, 0, 0, 0);
 
         mTickPath = new Path();
         mCenterPoint = new Point();
@@ -175,6 +182,7 @@ public class SmoothCheckBox extends View implements Checkable {
 
     /**
      * checked with animation
+     *
      * @param checked checked
      * @param animate change with animation
      */
@@ -261,14 +269,37 @@ public class SmoothCheckBox extends View implements Checkable {
 
     private void drawCenter(Canvas canvas) {
         mPaint.setColor(mUnCheckedColor);
-        float radius = (mCenterPoint.x - mStrokeWidth) * mScaleVal;
-        canvas.drawCircle(mCenterPoint.x, mCenterPoint.y, radius, mPaint);
+        if (isRect) {
+            float v = (mCenterPoint.x - mStrokeWidth) * mScaleVal;
+            mRect.set(
+                    mCenterPoint.x - v,
+                    mCenterPoint.y - v,
+                    mCenterPoint.x + v,
+                    mCenterPoint.y + v
+            );
+            canvas.drawRect(mRect, mPaint);
+        } else {
+            float radius = (mCenterPoint.x - mStrokeWidth) * mScaleVal;
+            canvas.drawCircle(mCenterPoint.x, mCenterPoint.y, radius, mPaint);
+        }
     }
 
     private void drawBorder(Canvas canvas) {
         mFloorPaint.setColor(mFloorColor);
-        int radius = mCenterPoint.x;
-        canvas.drawCircle(mCenterPoint.x, mCenterPoint.y, radius * mFloorScale, mFloorPaint);
+        if (isRect) {
+            float v = mCenterPoint.x * mFloorScale;
+            mFloorRect.set(
+                    mCenterPoint.x - v,
+                    mCenterPoint.y - v,
+                    mCenterPoint.x + v,
+                    mCenterPoint.y + v
+            );
+            canvas.drawRect(mFloorRect, mFloorPaint);
+        } else {
+            int radius = mCenterPoint.x;
+            canvas.drawCircle(mCenterPoint.x, mCenterPoint.y, radius * mFloorScale, mFloorPaint);
+        }
+
     }
 
     private void drawTick(Canvas canvas) {
@@ -421,4 +452,6 @@ public class SmoothCheckBox extends View implements Checkable {
     public interface OnCheckedChangeListener {
         void onCheckedChanged(SmoothCheckBox checkBox, boolean isChecked);
     }
+
+
 }
